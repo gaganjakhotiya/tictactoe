@@ -8,11 +8,23 @@ export function init(grid){
     prepareScoreArray(grid)
 }
 
+export function updateMove(row, col, unit) {
+    getArrayIndicesForCoordinates(row, col, _size).forEach(index => {
+        _scores[index] += UNIT_VAL[unit]
+    })
+}
+
+export function getBestMove(unit) {
+    let worstScore = UNIT_VAL[unit] > 0
+            ? Math.min.apply(null, _scores)
+            : Math.max.apply(null, _scores)
+      , scoreIndex = _scores.indexOf(worstScore)
+}
+
 export function getWinner(grid) {
-    let size = grid.length
-    for (let index = 0; index < scores.length; index++) {
-        if (Math.abs(scores[index]) === size) {
-            let [row, col] = getFirstCoordinatesFromArrayIndex(index, size)
+    for (let index = 0; index < _scores.length; index++) {
+        if (Math.abs(_scores[index]) === _size) {
+            let [row, col] = getFirstCoordinatesFromArrayIndex(index, _size)
             return grid[row][col]
         }
     }
@@ -26,18 +38,10 @@ const UNIT_VAL = {
     'O': -1,
 }
 
-let scores
+let _scores, _size
 function prepareScoreArray(grid){
-    let size = grid.length
-
-    scores = Array((size*2) + 2).fill(0)
-    for (let rowIndex = 0; rowIndex < size; rowIndex++) {
-        for (let colIndex = 0; colIndex < size; colIndex++) {
-            getArrayIndicesForCoordinates(rowIndex, colIndex, size).forEach(index => {
-                scores[index] += UNIT_VAL[grid[rowIndex][colIndex]]
-            })
-        }
-    }
+    _size = grid.length
+    _scores = Array((_size * 2) + 2).fill(0)
 }
 
 function getArrayIndicesForCoordinates(row, col, size) {
@@ -54,11 +58,11 @@ function getArrayIndicesForCoordinates(row, col, size) {
 
 function getFirstCoordinatesFromArrayIndex(index, size) {
     if (index === 2 * size)
-        return [0,0]
+        return [0, 0]
     if (index === (2 * size) + 1)
         return [0, size - 1]
     if (index % 2 === 0)
         return [0, index / 2]
     else
-        return [parseInt(index / 1), 0]    
+        return [parseInt(index / 2), 0]    
 }

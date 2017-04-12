@@ -8,7 +8,12 @@ import {
   View
 } from 'react-native';
 
-import {UNIT, getWinner, init} from './tictactoe'
+import {
+  UNIT,
+  init,
+  updateMove,
+  getWinner
+} from './tictactoe'
 
 export default class tictactoe extends Component {
   static defaultProps = {
@@ -47,9 +52,10 @@ export default class tictactoe extends Component {
     newState[row] = newState[row].slice()
     newState[row][col] = this.state.nextPlayerX ? UNIT.X : UNIT.O
 
+    updateMove(row, col, newState[row][col])
     this.setState({
       blocks: newState,
-      winner: getWinner(newState, this.props.n),
+      winner: getWinner(newState),
       nextPlayerX: !this.state.nextPlayerX
     })
   }
