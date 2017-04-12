@@ -30,16 +30,18 @@ export default class tictactoe extends Component {
     }
 
     this.state = {
-      blocks: blocks
+      blocks: blocks,
+      nextPlayerX: true,
     }
   }
 
   onTap(row, col) {
-    let newState = [...this.state.blocks]
-    newState[row] = [...newState[row]]
-    newState[row][col] = VALS.X
+    let newState = this.state.blocks.slice()
+    newState[row] = newState[row].slice()
+    newState[row][col] = this.state.nextPlayerX ? VALS.X : VALS.O
     this.setState({
-      block: newState
+      blocks: newState,
+      nextPlayerX: !this.state.nextPlayerX
     })
   }
 
@@ -52,9 +54,13 @@ export default class tictactoe extends Component {
         {this.state.blocks.map((row, rowIndex) => {
           return <View key={`row_${rowIndex}`} style={styles.row}>
             {row.map((block, colIndex) => {
-              return <TouchableHighlight onPress={this.onTap.bind(this, rowIndex, colIndex)}>
-                <Text key={`block_${rowIndex}${colIndex}`} style={styles.col}>{block}</Text>
-              </TouchableHighlight>
+              let key = `block_${rowIndex}${colIndex}`
+              let blockJSX = <Text key={key} style={styles.col}>{block}</Text>
+              return block !== VALS.U
+                ? blockJSX
+                : <TouchableHighlight key={key} onPress={this.onTap.bind(this, rowIndex, colIndex)}>
+                    {blockJSX}
+                  </TouchableHighlight>
             })}
           </View>
         })}
@@ -83,10 +89,10 @@ const styles = StyleSheet.create({
   },
   col: {
     borderWidth: 1,
-    fontSize: 40,
-    padding: 25,
-    paddingLeft: 30,
-    paddingRight: 30,
+    fontSize: 75,
+    width: 90,
+    textAlign: 'center',
+    height: 90,
   }
 });
 
