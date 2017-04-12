@@ -12,7 +12,8 @@ import {
   UNIT,
   init,
   updateMove,
-  getWinner
+  getBestMove,
+  getWinner,
 } from './tictactoe'
 
 export default class tictactoe extends Component {
@@ -22,7 +23,10 @@ export default class tictactoe extends Component {
 
   constructor(props){
     super(props)
-    this.state = this.getInitialState(props)
+    this.state = {
+      twoPlayer: true,
+      ...this.getInitialState(props)
+    }
   }
 
   getInitialState(props){
@@ -37,56 +41,93 @@ export default class tictactoe extends Component {
     init(blocks)
 
     return {
+      timer: null,
       winner: null,
       blocks: blocks,
       nextPlayerX: true,
     }
   }
 
-  newGame() {
-    this.setState(this.getInitialState(this.props))
+  newGame(playerMode) {
+    clearTimeout(this.state.timer)
+
+    if (typeof playerMode === 'undefined')
+      playerMode = this.state.twoPlayer
+    this.setState({
+      twoPlayer: playerMode,
+      ...this.getInitialState(this.props)
+    })
   }
 
   onTap(row, col) {
+    let timer = null
+    if (!this.state.twoPlayer) {
+      timer = setTimeout(() => {
+        this.selectBlock.apply(this, getBestMove(
+          this.state.blocks, this.getNextUnit()
+        ))
+      }, 300)
+    }
+    this.selectBlock(row, col, timer)
+  }
+
+  getNextUnit() {
+    return this.state.nextPlayerX ? UNIT.X : UNIT.O
+  }
+
+  selectBlock(row, col, timer) {
     let newState = this.state.blocks.slice()
     newState[row] = newState[row].slice()
-    newState[row][col] = this.state.nextPlayerX ? UNIT.X : UNIT.O
+    newState[row][col] = this.getNextUnit()
 
     updateMove(row, col, newState[row][col])
     this.setState({
+      timer: timer,
       blocks: newState,
       winner: getWinner(newState),
       nextPlayerX: !this.state.nextPlayerX
     })
   }
 
+  getGridJSX() {
+    let freezeTouch = this.state.timer || this.state.winner
+
+    return this.state.blocks.map((row, rowIndex) => {
+      return <View key={`row_${rowIndex}`} style={styles.row}>
+        {row.map((block, colIndex) => {
+          let key = `block_${rowIndex}${colIndex}`
+          let blockJSX = <Text key={key} style={styles.col}>{block}</Text>
+          return freezeTouch || block !== UNIT.U
+            ? blockJSX
+            : <TouchableHighlight key={key} onPress={this.onTap.bind(this, rowIndex, colIndex)}>
+                {blockJSX}
+              </TouchableHighlight>
+        })}
+      </View>
+    })
+  }
+
   render() {
+    let vsButtonText = `Player vs ${this.state.twoPlayer ? 'Player' : 'Computer'}`
+      , gridJSX = this.getGridJSX()
+
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>
-          TIC TAC TOE
-        </Text>
-        <Text>{this.state.winner && `${this.state.winner} WON!`}</Text>
-        <View>
-          {this.state.blocks.map((row, rowIndex) => {
-            return <View key={`row_${rowIndex}`} style={styles.row}>
-              {row.map((block, colIndex) => {
-                let key = `block_${rowIndex}${colIndex}`
-                let blockJSX = <Text key={key} style={styles.col}>{block}</Text>
-                return block !== UNIT.U || this.state.winner
-                  ? blockJSX
-                  : <TouchableHighlight key={key} onPress={this.onTap.bind(this, rowIndex, colIndex)}>
-                      {blockJSX}
-                    </TouchableHighlight>
-              })}
-            </View>
-          })}
-        </View>
+        <Text style={styles.welcome}>TIC TAC TOE</Text>
+        <Text style={styles.winner}>{this.state.winner && `${this.state.winner} WON!`}</Text>
+        <View>{gridJSX}</View>
         <View style={styles.button}>
           <Button
             onPress={this.newGame.bind(this)}
             title="New Game"
             accessibilityLabel="Start a fresh game"
+          />
+        </View>
+        <View style={styles.button}>
+          <Button
+            onPress={this.newGame.bind(this, !this.state.twoPlayer)}
+            title={vsButtonText}
+            accessibilityLabel="Toggle player mode"
           />
         </View>
       </View>
@@ -105,7 +146,13 @@ const styles = StyleSheet.create({
     fontSize: 30,
     textAlign: 'center',
     margin: 10,
-    marginBottom: 30
+    marginBottom: 30,
+    color: '#272837',
+  },
+  winner: {
+    fontSize: 20,
+    textAlign: 'center',
+    margin: 10,
   },
   row: {
     borderColor: '#000000',

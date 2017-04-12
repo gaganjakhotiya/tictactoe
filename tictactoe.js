@@ -14,11 +14,38 @@ export function updateMove(row, col, unit) {
     })
 }
 
-export function getBestMove(unit) {
-    let worstScore = UNIT_VAL[unit] > 0
+export function getBestMove(grid, unit) {
+    let direction = UNIT_VAL[unit] > 0
+      , worstScore = direction
             ? Math.min.apply(null, _scores)
             : Math.max.apply(null, _scores)
       , scoreIndex = _scores.indexOf(worstScore)
+    
+    if (scoreIndex === _scores.length - 2) {
+        for (let index = 0; index < _size; index++) {
+            if (grid[index][index] === UNIT.U)
+                return [index, index]
+        }
+    }
+    if (scoreIndex === _scores.length - 1) {
+        for (let index = 0; index < _size; index++) {
+            if (grid[index][_size - 1 - index] === UNIT.U)
+                return [index, _size - 1 - index]
+        }
+    }
+    if (scoreIndex % 2 === 0) {
+        let col = scoreIndex / 2
+        for (let index = 0; index < _size; index++) {
+            if (grid[index][col] === UNIT.U)
+                return [index, col]
+        }
+    } else {
+        let row = parseInt(scoreIndex / 2)
+        for (let index = 0; index < _size; index++) {
+            if (grid[row][index] === UNIT.U)
+                return [row, index]
+        }
+    }
 }
 
 export function getWinner(grid) {
