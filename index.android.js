@@ -8,7 +8,7 @@ import {
   View
 } from 'react-native';
 
-import {UNIT, getWinner} from './tictactoe'
+import {UNIT, getWinner, init} from './tictactoe'
 
 export default class tictactoe extends Component {
   static defaultProps = {
@@ -28,6 +28,8 @@ export default class tictactoe extends Component {
         blocks[i][j] = UNIT.U
       }
     }
+
+    init(blocks)
 
     return {
       winner: null,
