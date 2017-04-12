@@ -36,3 +36,27 @@ export function getWinner(grid, size) {
     if (Math.abs(backward) === size)
         return grid0[0][size - 1]
 }
+
+let scores
+function prepareScoreArray(grid){
+    let size = grid.length
+
+    scores = []
+    for (let rowIndex = 0; rowIndex < size; rowIndex++) {
+        for (let colIndex = 0; colIndex < size; colIndex++) {
+            
+        }
+    }
+}
+
+function getArrayIndicesForCoordinates(row, col, size) {
+    let impactedIndices = [
+        2 * row,
+        (2 * col) + 1
+    ]
+    if (row === col)
+        impactedIndices.push(2 * size)
+    if (row + col + 1 === size)
+        impactedIndices.push((2 * size) + 1)
+    return impactedIndices
+}
