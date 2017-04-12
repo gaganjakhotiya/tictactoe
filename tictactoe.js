@@ -4,47 +4,35 @@ export const UNIT = {
   O: 'O',
 }
 
+const UNIT_VAL = {
+    '': 0,
+    'X': 1,
+    'O': -1,
+}
+
 export function getWinner(grid, size) {
-    let lead
-    for (let counter = 0; counter < size; counter++ ) {
-        lead = grid[counter][0]
-        for (let horizontalCounter = 0; horizontalCounter < size; horizontalCounter++) {
-            if (grid[counter][horizontalCounter] === UNIT.U
-                || grid[counter][horizontalCounter] !== lead) {
-                break
-            } else if (horizontalCounter === size - 1) {
-                return lead
-            }
+    let backward = 0
+      , forward = 0
+
+    for (let lineCounter = 0; lineCounter < size; lineCounter++ ) {
+        let horizontal = 0
+          , vertical = 0
+        for (let blockCounter = 0; blockCounter < size; blockCounter++) {
+            horizontal += UNIT_VAL[grid[lineCounter][blockCounter]]
+            vertical += UNIT_VAL[grid[blockCounter][lineCounter]]
         }
 
-        lead = grid[0][counter]
-        for (let verticalCounter = 0; verticalCounter < size; verticalCounter++) {
-            if (grid[verticalCounter][counter] === UNIT.U
-                || grid[verticalCounter][counter] !== lead) {
-                break
-            } else if (verticalCounter === size - 1) {
-                return lead
-            }
-        }
+        if (Math.abs(horizontal) === size) 
+            return grid[lineCounter][0]
+        if (Math.abs(vertical) === size)
+            return grid[0][lineCounter]
+
+        forward += UNIT_VAL[grid[lineCounter][lineCounter]]
+        backward += UNIT_VAL[grid[lineCounter][size - 1 -lineCounter]]
     }
 
-    lead = grid[0][0]
-    for (let positionIndex = 0; positionIndex < size; positionIndex++) {
-        if (grid[positionIndex][positionIndex] === UNIT.U
-            || grid[positionIndex][positionIndex] !== lead) {
-            break
-        } else if (positionIndex === size - 1) {
-            return lead
-        }
-    }
-
-    lead = grid[0][size - 1 - 0]
-    for (let positionIndex = 0; positionIndex < size; positionIndex++) {
-        if (grid[positionIndex][size - 1 - positionIndex] === UNIT.U
-            || grid[positionIndex][size - 1 - positionIndex] !== lead) {
-            break
-        } else if (positionIndex === size - 1) {
-            return lead
-        }
-    }
+    if (Math.abs(forward) === size) 
+        return grid[0][0]
+    if (Math.abs(backward) === size)
+        return grid0[0][size - 1]
 }
