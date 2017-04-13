@@ -9,24 +9,8 @@ export function init(grid){
     _scores = initScoreArray(grid)
 }
 
-export function nextBestMove(unit, grid, scores) {
-    let limit = grid.length * grid.length
-      , bestScore = Math.NEGATIVE_INFINITY
-      , bestMatch
-
-    for (let index = 0; index < limit; index++) {
-        let [row, col] = getRowColIterationIndex(index)
-        if (grid[row][col] !== UNIT.U) {
-            let score = findScoreForMove(unit, grid, [...scores], row, col)
-            if (bestScore < score) {
-                bestMatch = [row, col]
-            }
-        }
-    }
-}
-
-function findScoreForMove(unit, grid, scores, row, col) {
-    
+export function getBestMove() {
+    return nextBestMove(unit, grid, _scores)
 }
 
 export function getWinner(grid) {
@@ -67,6 +51,7 @@ function updateScores(row, col, grid, scores) {
     if (grid[row][col] === UNIT.U)
         return scores
     
+    let winner
     getIndicesToUpdate(row, col, grid.length).forEach(index => {
         // [1] Need to updated the object reference. Score object reference
         // is same for all objects in the array, on init. GOTO [0]
@@ -74,8 +59,56 @@ function updateScores(row, col, grid, scores) {
             score: scores[index].score + UNIT_VAL[grid[row][col]],
             input: scores[index].input + 1
         }
+        if (Math.abs(scores[index].score) === grid.length)
+            winner = grid[row][col]
     })
-    console.log("[UPDATE]", scores)
+    console.log("[UPDATE]", scores, winner)
+    return winner
+}
+
+function nextBestMove(unit, grid, scores) {
+    let limit = grid.length * grid.length
+      , findMin = UNIT_VAL[unit] < 0
+      , bestScore = findMin
+            ? Math.POSITIVE_INFINITY
+            : Math.NEGATIVE_INFINITY
+      , bestMatch
+
+    for (let index = 0; index < limit; index++) {
+        let [row, col] = getRowColIterationIndex(index)
+        if (grid[row][col] === UNIT.U) {
+            let score = findScoreForMove(unit, grid, scores, row, col)
+            if ((findMin && bestScore > score)
+                || (!findMin && bestScore < score)) {
+                bestScore = score
+                bestMatch = [row, col]
+            }
+        }
+    }
+
+    return bestMatch
+}
+
+function findScoreForMove(unit, grid, scores, row, col) {
+    let newScores = [...scores]
+    let winner = updateScores(row, col, grid, newScores)
+
+    if (winner)
+        return UNIT_VAL[winner]
+
+    let score = 0
+      , newGrid = [...grid]
+    newGrid[row] = [...newGrid[row]]
+    newGrid[row][col] = unit
+
+    for (let index = 0; index < limit; index++) {
+        let [newRow, newCol] = getRowColIterationIndex(index)
+        if (grid[newRow][newCol] === UNIT.U) {
+            score += findScoreForMove(toggleUnit(unit), newGrid, newScores, newRow, newCol)
+        }
+    }
+
+    return score
 }
 
 function getIndicesToUpdate(row, col, size) {
@@ -108,22 +141,9 @@ function getRowColIterationIndex(index, gridSize) {
     ]
 }
 
-function min(list) {
-    list.reduce((last, score) => {
-        ['D', 'W'].indexOf(score) === 1
-            ? last
-            : last < score
-                ? last
-                : score
-    }, Number.POSITIVE_INFINITY)
-}
+function toggleUnit(unit) {
+    if (unit === UNIT.U)
+        return unit
 
-function max(list) {
-    list.reduce((last, score) => {
-        ['D', 'W'].indexOf(score) === 1
-            ? last
-            : last > score
-                ? last
-                : score
-    }, Number.NEGATIVE_INFINITY)
+    return unit === UNIT.X ? UNIT.O : UNIT.X
 }
