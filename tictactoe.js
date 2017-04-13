@@ -9,8 +9,24 @@ export function init(grid){
     _scores = initScoreArray(grid)
 }
 
-export function nextBestMove(grid, unit) {
+export function nextBestMove(unit, grid, scores) {
+    let limit = grid.length * grid.length
+      , bestScore = Math.NEGATIVE_INFINITY
+      , bestMatch
 
+    for (let index = 0; index < limit; index++) {
+        let [row, col] = getRowColIterationIndex(index)
+        if (grid[row][col] !== UNIT.U) {
+            let score = findScoreForMove(unit, grid, [...scores], row, col)
+            if (bestScore < score) {
+                bestMatch = [row, col]
+            }
+        }
+    }
+}
+
+function findScoreForMove(unit, grid, scores, row, col) {
+    
 }
 
 export function getWinner(grid) {
@@ -83,6 +99,13 @@ function getFirstCoordinatesFromArrayIndex(index, size) {
         return [index / 2, 0]
     else
         return [0, parseInt(index / 2)]
+}
+
+function getRowColIterationIndex(index, gridSize) {
+    return [
+        Math.floor(index / gridSize),
+        index % gridSize
+    ]
 }
 
 function min(list) {
