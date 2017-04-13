@@ -63,9 +63,12 @@ export default class tictactoe extends Component {
     let timer = null
     if (!this.state.twoPlayer) {
       timer = setTimeout(() => {
-        this.selectBlock.apply(this, getBestMove(
+        if (this.state.winner) return
+        let [row, col] = getBestMove(
           this.state.blocks, this.getNextUnit()
-        ))
+        )
+        console.log("[COMPUTER]", row, col)
+        this.selectBlock(row, col)
       }, 300)
     }
     this.selectBlock(row, col, timer)
@@ -80,7 +83,7 @@ export default class tictactoe extends Component {
     newState[row] = newState[row].slice()
     newState[row][col] = this.getNextUnit()
 
-    updateMove(row, col, newState[row][col])
+    updateMove(row, col, newState)
     this.setState({
       timer: timer,
       blocks: newState,
