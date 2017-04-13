@@ -12,15 +12,20 @@ export function updateMove(row, col, unit) {
     getArrayIndicesForCoordinates(row, col, _size).forEach(index => {
         _scores[index] += UNIT_VAL[unit]
     })
+    console.log("[UPDATE]", _scores)
 }
 
 export function getBestMove(grid, unit) {
+    // If unit is positive find the minimum score to gain balance
     let direction = UNIT_VAL[unit] > 0
       , worstScore = direction
             ? Math.min.apply(null, _scores)
             : Math.max.apply(null, _scores)
       , scoreIndex = _scores.indexOf(worstScore)
-    
+
+    console.log('[PREDICTION]', worstScore,
+        scoreIndex, getFirstCoordinatesFromArrayIndex(scoreIndex))
+
     if (scoreIndex === _scores.length - 2) {
         for (let index = 0; index < _size; index++) {
             if (grid[index][index] === UNIT.U)
@@ -34,16 +39,16 @@ export function getBestMove(grid, unit) {
         }
     }
     if (scoreIndex % 2 === 0) {
-        let col = scoreIndex / 2
-        for (let index = 0; index < _size; index++) {
-            if (grid[index][col] === UNIT.U)
-                return [index, col]
+        let row = scoreIndex / 2
+        for (let col = 0; col < _size; col++) {
+            if (grid[row][col] === UNIT.U)
+                return [row, col]
         }
     } else {
-        let row = parseInt(scoreIndex / 2)
-        for (let index = 0; index < _size; index++) {
-            if (grid[row][index] === UNIT.U)
-                return [row, index]
+        let col = parseInt(scoreIndex / 2)
+        for (let row = 0; row < _size; row++) {
+            if (grid[row][col] === UNIT.U)
+                return [row, col]
         }
     }
 }
@@ -52,6 +57,7 @@ export function getWinner(grid) {
     for (let index = 0; index < _scores.length; index++) {
         if (Math.abs(_scores[index]) === _size) {
             let [row, col] = getFirstCoordinatesFromArrayIndex(index, _size)
+            console.log("[WINNER]", row, col, grid[row][col])
             return grid[row][col]
         }
     }
@@ -89,7 +95,7 @@ function getFirstCoordinatesFromArrayIndex(index, size) {
     if (index === (2 * size) + 1)
         return [0, size - 1]
     if (index % 2 === 0)
-        return [0, index / 2]
+        return [index / 2, 0]
     else
-        return [parseInt(index / 2), 0]    
+        return [0, parseInt(index / 2)]
 }
