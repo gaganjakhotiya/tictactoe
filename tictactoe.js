@@ -4,57 +4,19 @@ export const UNIT = {
   O: 'O',
 }
 
-let _scores, _size
+let _scores
 export function init(grid){
-    _scores = prepareScoreArray(grid)
-    _size = grid.length
-}
-
-export function getBestMove(grid, unit) {
-    // If unit is positive find the minimum score to gain balance
-    let direction = UNIT_VAL[unit] > 0
-      , worstScore = direction ? min(_scores) : ma(_scores)
-      , scoreIndex = _scores.indexOf(worstScore)
-
-    console.log('[PREDICTION]', worstScore,
-        scoreIndex, getFirstCoordinatesFromArrayIndex(scoreIndex))
-
-    if (scoreIndex === _scores.length - 2) {
-        for (let index = 0; index < _size; index++) {
-            if (grid[index][index] === UNIT.U)
-                return [index, index]
-        }
-    }
-    if (scoreIndex === _scores.length - 1) {
-        for (let index = 0; index < _size; index++) {
-            if (grid[index][_size - 1 - index] === UNIT.U)
-                return [index, _size - 1 - index]
-        }
-    }
-    if (scoreIndex % 2 === 0) {
-        let row = scoreIndex / 2
-        for (let col = 0; col < _size; col++) {
-            if (grid[row][col] === UNIT.U)
-                return [row, col]
-        }
-    } else {
-        let col = parseInt(scoreIndex / 2)
-        for (let row = 0; row < _size; row++) {
-            if (grid[row][col] === UNIT.U)
-                return [row, col]
-        }
-    }
+    _scores = initScoreArray(grid)
 }
 
 export function nextBestMove(grid, unit) {
-    let size = grid.length
 
 }
 
 export function getWinner(grid) {
     for (let index = 0; index < _scores.length; index++) {
-        if (Math.abs(_scores[index]) === _size) {
-            let [row, col] = getFirstCoordinatesFromArrayIndex(index, _size)
+        if (Math.abs(_scores[index].score) === grid.length) {
+            let [row, col] = getFirstCoordinatesFromArrayIndex(index, grid.length)
             console.log("[WINNER]", row, col, grid[row][col])
             return grid[row][col]
         }
@@ -69,22 +31,16 @@ const UNIT_VAL = {
     'O': -1,
 }
 
-function prepareScoreArray(grid){
-    let scores = Array((grid.length * 2) + 2)
-    scores.forEach((value, index) => {
-        scores[index] = {
-            score: 0,
-            input: 0
-        }
+function initScoreArray(grid){
+    // [0] Fill keeps same reference across the array. GOTO [1]
+    let scores = Array((grid.length * 2) + 2).fill({
+        score: 0,
+        input: 0
     })
 
     for (let row = 0; row < grid.length; row++) {
         for (let col = 0; col < grid.length; col++) {
-            if (grid[row][col] !== UNIT.U)
-                getIndicesToUpdate(row, col, grid.length).forEach(index => {
-                    scores[index].score += UNIT_VAL[grid[row][col]]
-                    scores[index].input += 1
-                })
+            updateScores(row, col, grid, scores)
         }
     }
 
@@ -92,25 +48,17 @@ function prepareScoreArray(grid){
 }
 
 function updateScores(row, col, grid, scores) {
-    let size = grid.length
+    if (grid[row][col] === UNIT.U)
+        return scores
     
-    getIndicesToUpdate(row, col, size).forEach(index => {
-        scores[index] += UNIT_VAL[grid[row][col]]
+    getIndicesToUpdate(row, col, grid.length).forEach(index => {
+        // [1] Need to updated the object reference. Score object reference
+        // is same for all objects in the array, on init. GOTO [0]
+        scores[index] = {
+            score: scores[index].score + UNIT_VAL[grid[row][col]],
+            input: scores[index].input + 1
+        }
     })
-    for (let counter = 0; counter < size; counter++) {
-        if (grid[row][counter] === UNIT.U) {
-            break
-        } else if (counter + 1 === size) {
-            scores[2 * row] = scores[2 * row] === size ? 'W' : 'D'
-        }
-    }
-    for (let counter = 0; counter < size; counter++) {
-        if (grid[counter][col] === UNIT.U) {
-            break
-        } else if (counter + 1 === size) {
-            scores[(2 * col) + 1] = scores[(2 * col) + 1] === size ? 'W' : 'D'
-        }
-    }
     console.log("[UPDATE]", scores)
 }
 
