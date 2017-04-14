@@ -9,15 +9,18 @@ export function init(grid){
     _scores = initScoreArray(grid)
 }
 
-export function getBestMove() {
-    return nextBestMove(unit, grid, _scores)
+export function getBestMove(currenctGrid, unit) {
+    return nextBestMove(unit, currenctGrid, _scores)
+}
+
+export function updateMove(row, col, latestGrid) {
+    updateScores(row, col, latestGrid, _scores)
 }
 
 export function getWinner(grid) {
     for (let index = 0; index < _scores.length; index++) {
         if (Math.abs(_scores[index].score) === grid.length) {
             let [row, col] = getFirstCoordinatesFromArrayIndex(index, grid.length)
-            console.log("[WINNER]", row, col, grid[row][col])
             return grid[row][col]
         }
     }
@@ -47,14 +50,15 @@ function initScoreArray(grid){
     return scores
 }
 
+// Grid contains the new entry made at (row, col)
 function updateScores(row, col, grid, scores) {
     if (grid[row][col] === UNIT.U)
-        return scores
+        return
     
     let winner
     getIndicesToUpdate(row, col, grid.length).forEach(index => {
         // [1] Need to updated the object reference. Score object reference
-        // is same for all objects in the array, on init. GOTO [0]
+        //     is same for all objects in the array, on init. GOTO [0]
         scores[index] = {
             score: scores[index].score + UNIT_VAL[grid[row][col]],
             input: scores[index].input + 1
@@ -62,7 +66,6 @@ function updateScores(row, col, grid, scores) {
         if (Math.abs(scores[index].score) === grid.length)
             winner = grid[row][col]
     })
-    console.log("[UPDATE]", scores, winner)
     return winner
 }
 
@@ -70,42 +73,53 @@ function nextBestMove(unit, grid, scores) {
     let limit = grid.length * grid.length
       , findMin = UNIT_VAL[unit] < 0
       , bestScore = findMin
-            ? Math.POSITIVE_INFINITY
-            : Math.NEGATIVE_INFINITY
+            ? Number.POSITIVE_INFINITY
+            : Number.NEGATIVE_INFINITY
       , bestMatch
 
     for (let index = 0; index < limit; index++) {
-        let [row, col] = getRowColIterationIndex(index)
-        if (grid[row][col] === UNIT.U) {
-            let score = findScoreForMove(unit, grid, scores, row, col)
-            if ((findMin && bestScore > score)
-                || (!findMin && bestScore < score)) {
-                bestScore = score
-                bestMatch = [row, col]
-            }
+        let [row, col] = getRowColIterationIndex(index, grid.length)
+        if (grid[row][col] !== UNIT.U)
+            continue
+
+        let newScores = [...scores]
+            , newGrid = [...grid]
+
+        newGrid[row] = [...newGrid[row]]
+        newGrid[row][col] = unit
+        
+        let score = findScoreForMove(toggleUnit(unit), newGrid, newScores, row, col, 0)
+        if ((findMin && bestScore > score)
+            || (!findMin && bestScore < score)) {
+            bestScore = score
+            bestMatch = [row, col]
         }
     }
 
     return bestMatch
 }
 
-function findScoreForMove(unit, grid, scores, row, col) {
-    let newScores = [...scores]
-    let winner = updateScores(row, col, grid, newScores)
-
+function findScoreForMove(unit, grid, scores, row, col, level) {
+    let winner = updateScores(row, col, grid, scores)
+    // console.log("--", winner, '--', level, '--', grid)
     if (winner)
         return UNIT_VAL[winner]
-
+    
     let score = 0
-      , newGrid = [...grid]
-    newGrid[row] = [...newGrid[row]]
-    newGrid[row][col] = unit
+      , limit = grid.length * grid.length
 
     for (let index = 0; index < limit; index++) {
-        let [newRow, newCol] = getRowColIterationIndex(index)
-        if (grid[newRow][newCol] === UNIT.U) {
-            score += findScoreForMove(toggleUnit(unit), newGrid, newScores, newRow, newCol)
-        }
+        let [newRow, newCol] = getRowColIterationIndex(index, grid.length)
+        if (grid[newRow][newCol] !== UNIT.U)
+            continue
+
+        let newScores = [...scores]
+            , newGrid = [...grid]
+
+        newGrid[newRow] = [...newGrid[newRow]]
+        newGrid[newRow][newCol] = unit
+
+        score += findScoreForMove(toggleUnit(unit), newGrid, newScores, newRow, newCol, 1 + level)
     }
 
     return score

@@ -41,6 +41,7 @@ export default class tictactoe extends Component {
     init(blocks)
 
     return {
+      terms: 0,
       timer: null,
       winner: null,
       blocks: blocks,
@@ -51,8 +52,6 @@ export default class tictactoe extends Component {
   newGame(playerMode) {
     clearTimeout(this.state.timer)
 
-    if (typeof playerMode === 'undefined')
-      playerMode = this.state.twoPlayer
     this.setState({
       twoPlayer: playerMode,
       ...this.getInitialState(this.props)
@@ -60,15 +59,15 @@ export default class tictactoe extends Component {
   }
 
   onTap(row, col) {
-    let timer = null
-    if (!this.state.twoPlayer) {
+    let size = this.state.blocks.length
+      , timer = null
+    if (!this.state.twoPlayer && this.state.terms + 1 !== size * size) {
       timer = setTimeout(() => {
         if (this.state.winner) return
-        let [row, col] = getBestMove(
+
+        this.selectBlock.apply(this, getBestMove(
           this.state.blocks, this.getNextUnit()
-        )
-        console.log("[COMPUTER]", row, col)
-        this.selectBlock(row, col)
+        ))
       }, 300)
     }
     this.selectBlock(row, col, timer)
@@ -85,6 +84,7 @@ export default class tictactoe extends Component {
 
     updateMove(row, col, newState)
     this.setState({
+      terms: this.state.terms + 1,
       timer: timer,
       blocks: newState,
       winner: getWinner(newState),
@@ -113,15 +113,25 @@ export default class tictactoe extends Component {
   render() {
     let vsButtonText = `Player vs ${this.state.twoPlayer ? 'Player' : 'Computer'}`
       , gridJSX = this.getGridJSX()
+      , size = this.state.blocks.length
+      , helpMessage = `It's a draw`
+
+    helpMessage = this.state.terms === size * size
+        ? this.state.winner
+            ? `${this.state.winner} WON!`
+            : `It's a DRAW!`
+        : this.state.winner
+            ? `${this.state.winner} WON!`
+            : `${this.state.nextPlayerX ? UNIT.X : UNIT.O}'s chances!`
 
     return (
       <View style={styles.container}>
         <Text style={styles.welcome}>TIC TAC TOE</Text>
-        <Text style={styles.winner}>{this.state.winner && `${this.state.winner} WON!`}</Text>
+        <Text style={styles.winner}>{helpMessage}</Text>
         <View>{gridJSX}</View>
         <View style={styles.button}>
           <Button
-            onPress={this.newGame.bind(this)}
+            onPress={this.newGame.bind(this, this.state.twoPlayer)}
             title="New Game"
             accessibilityLabel="Start a fresh game"
           />
